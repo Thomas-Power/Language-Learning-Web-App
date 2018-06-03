@@ -1,0 +1,205 @@
+<html>
+	<head>
+	<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+	</head>
+
+	<body>
+	<div style="background-color:lightblue" width=600 height=600 align="middle">
+	<div id="landingPage" class="sheet" margin="auto">
+		<textarea id="username" contenteditable="true" rows="1" cols="10">Guest</textarea></br>
+		<button sheet="imageQuiz" id="makeIQuiz" class="nav" type="button">Image Quiz</button>
+		<button sheet="textQuiz" id="makeTQuiz" class="nav" type="button">Text Quiz</button>
+		</br>
+		<button sheet="scoreSheet" id="showScores" class="nav" type="button">Score List</button>
+	</div>
+
+	<div id="textQuiz" class="sheet">
+	<h1 id="text_number"></h1><h1 class="answer" id="answer_text" answer=""></h1></br>
+		<input name="answer" type="radio" class="answer1" answer=""><img class="answer_1" src="">
+		<input name="answer" type="radio" class="answer2" answer=""><img class="answer_2" src="">
+		<input name="answer" type="radio" class="answer3" answer=""><img class="answer_3" src="">
+		<input name="answer" type="radio" class="answer4" answer=""><img class="answer_4" src="">
+		<input name="answer" type="radio" class="answer5" answer=""><img class="answer_5" src=""></br>
+		<button id="nextText" type="button">Next Question</button>
+	</div>
+
+	<div id="imageQuiz" class="sheet">
+	<h1 id="image_number"></h1><img class="answer" id="answer_image" answer="" src=""></br>
+		<input name="answer" type="radio" class="answer1" answer=""><p class="answer_1"></p>
+		<input name="answer" type="radio" class="answer2" answer=""><p class="answer_2"></p>
+		<input name="answer" type="radio" class="answer3" answer=""><p class="answer_3"></p>
+		<input name="answer" type="radio" class="answer4" answer=""><p class="answer_4"></p>
+		<input name="answer" type="radio" class="answer5" answer=""><p class="answer_5"></p>
+		<button id="nextImage" type="button">Next Question</button>
+	</div>
+
+	<div id="scoreSheet" class="sheet">
+		<button sheet="scoreSheet" class="nav" type="button" id="getScores">Back</button>
+		<ul id=scores></ul>
+	</div>
+</html>
+
+<script>
+	$(function() {
+		var curAnswer = "";
+		var curGuess = "";
+		var score = 0;
+		var scores = [];
+		getScores();
+		
+		$(".sheet").toggle();
+		$("#landingPage").toggle();
+		
+		$(".nav").on("click", function() {
+			var sheet = $(this).attr("sheet");
+			$("#" + sheet).toggle();
+			$("#landingPage").toggle();
+		});
+		
+		$("#makeIQuiz").on("click", function() {
+			$.get("data.json", function(data){
+				postImageQuestion(data, 0);
+			});
+		});
+		
+		$("#makeTQuiz").on("click", function() {
+			$.get("data.json", function(data){
+				postTextQuestion(data, 0);
+			});
+		});
+		
+		$("#nextImage").on("click", function() {
+			var number = parseInt($("#image_number").html());
+			if(curGuess === curAnswer){
+				score++;
+			}
+			if(number < 20){
+				$.get("data.json", function(data){
+					postImageQuestion(data, number);
+				});
+			}
+			else{
+				finishQuiz();
+			}
+		});
+		
+		$("#nextText").on("click", function() {
+			var number = parseInt($("#text_number").html());
+			if(curGuess === curAnswer){
+				score++;
+			}
+			if(number < 20){
+				$.get("data.json", function(data){
+					postTextQuestion(data, number);
+				});
+			}
+			else{
+				finishQuiz();
+			}
+		});
+		
+		
+
+		$("input[name=answer]").click(function() {
+		   curGuess = $(this).attr("answer");
+		});
+		
+		function postImageQuestion(cards, number){
+			$("#image_number").html(number+1);
+			var questions = [];
+			var numbers = [];
+			for(var i = 0; i < 5; i++){
+				var check = true;
+				var num = Math.floor((Math.random() * 15));
+				for(var e = 0; e < 5; e++){
+					if(numbers[e] === num){
+						i--;
+						check = false;
+					}
+				}
+				if(check == true){
+					numbers.push(num);
+				}
+			}
+			for(var i = 0; i < 5; i++){
+				questions.push(cards[numbers[i]]);
+				$(".answer_" + (i+1)).text(questions[i]);
+				$(".answer" + (i+1)).attr("answer", questions[i]);
+			}
+			answer = Math.floor((Math.random() * 5));
+			curAnswer = questions[answer];
+			$("#answer_image").attr("src", "Cards/" + questions[answer] + ".jpg");
+		}
+		
+		function postTextQuestion(cards, number){
+			$("#text_number").html(number+1);
+			var questions = [];
+			var numbers = [];
+			for(var i = 0; i < 5; i++){
+				var check = true;
+				var num = Math.floor((Math.random() * 15));
+				for(var e = 0; e < 5; e++){
+					if(numbers[e] === num){
+						i--;
+						check = false;
+					}
+				}
+				if(check == true){
+					numbers.push(num);
+				}
+			}
+			for(var i = 0; i < 5; i++){
+				questions.push(cards[numbers[i]]);
+				$(".answer_" + (i+1)).attr("src", "Cards/" + questions[i] + ".jpg");
+				$(".answer" + (i+1)).attr("answer", questions[i]);
+			}
+			answer = Math.floor((Math.random() * 5));
+			curAnswer = questions[answer];
+			$("#answer_text").text(questions[answer]);
+		}
+		
+		function finishQuiz(){
+			var your_score = {
+				name: $("#username").html(),
+				score: score,
+			};
+			addScore(your_score);
+			score = 0;
+			$("#textQuiz").hide();
+			$("#imageQuiz").hide();
+			$("#scoreSheet").toggle();
+		}
+		
+		function addScore(my_score){
+			$.ajax({
+				type: "GET",
+				url: 'http://localhost:3000/addscore',
+				data: my_score,
+				success: function(){
+					getScores();},
+				error: function() {console.log("Error!");}
+			});
+		}
+		
+		function getScores(){
+			$("#scores").empty();
+
+			$.ajax({
+				dataType : 'json',
+				url: 'http://localhost:3000/scores',
+				success: function (data) {
+					postScores(data);
+				},
+				error: function() {console.log("Error!");}
+			}); 
+		}
+		
+		function postScores(scores){
+			$.each(scores, function(i, i_score){
+					$("#scores").append("<li>" + i_score["name"] + ": " + i_score["score"] + "</li>")
+			});
+		}
+		
+	});
+</script>
+</body>
