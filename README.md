@@ -5,3 +5,4 @@ Web app displaying the use of server-side processing to generate random user exp
 Featured libraries: Express JS, Ajax, myphpAdmin
 
 Example screenshot:
+![alt text](https://raw.githubusercontent.com/Thomas-Power/Language-Learning-Web-App/master/class%20screenshot.png)
