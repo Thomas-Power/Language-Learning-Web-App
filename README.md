@@ -1,2 +1,3 @@
 # Language-Learning-Web-App
-Web app showcasing database to client interaction via RESTful API
+
+Web app displaying the use of server-side processing to generate random user experience and exchanging data to and from client-side to display and record performance of all users.
